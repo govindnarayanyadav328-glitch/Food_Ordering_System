@@ -39,7 +39,7 @@ public class RegisterServlet extends HttpServlet {
 
             ps.executeUpdate();
 
-            response.sendRedirect("login");
+            response.sendRedirect("Login");
 
         } catch (Exception e) {
             e.printStackTrace();

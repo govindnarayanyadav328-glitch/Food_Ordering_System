@@ -39,10 +39,12 @@ public class LoginServlet extends HttpServlet {
 
             if (rs.next()) {
                 String role = rs.getString("role");
+                String fullName = rs.getString("name");  // Get full name from database
 
                 HttpSession session = request.getSession();
-                session.setAttribute("user", email);
-                session.setAttribute("role", role);  // IMPORTANT: Store role in session
+                session.setAttribute("user", fullName);      // Store full name instead of email
+                session.setAttribute("userEmail", email);    // Store email separately if needed
+                session.setAttribute("role", role);
 
                 if (role.equals("admin")) {
                     response.sendRedirect("Admin");

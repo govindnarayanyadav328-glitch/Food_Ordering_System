@@ -97,6 +97,11 @@
         margin-top: 1.5rem;
         padding-top: 1.5rem;
         border-top: 1px solid #e9ecef;
+        display: none;
+    }
+    
+    .payment-details.active {
+        display: block;
     }
     
     .form-group {
@@ -201,7 +206,7 @@
         <p style="color: #6c757d; margin-bottom: 1.5rem;">Choose your preferred payment option</p>
         
         <!-- Khalti -->
-        <div class="payment-method" data-method="khalti" onclick="selectMethod('khalti')">
+        <div class="payment-method" onclick="selectMethod('khalti')">
             <div class="payment-method-icon">
                 <i class="fas fa-wallet" style="color: #5c2d91;"></i>
             </div>
@@ -212,7 +217,7 @@
         </div>
         
         <!-- eSewa -->
-        <div class="payment-method" data-method="esewa" onclick="selectMethod('esewa')">
+        <div class="payment-method" onclick="selectMethod('esewa')">
             <div class="payment-method-icon">
                 <i class="fas fa-rupee-sign" style="color: #2c8c3e;"></i>
             </div>
@@ -223,7 +228,7 @@
         </div>
         
         <!-- Credit/Debit Card -->
-        <div class="payment-method" data-method="card" onclick="selectMethod('card')">
+        <div class="payment-method" onclick="selectMethod('card')">
             <div class="payment-method-icon">
                 <i class="fas fa-credit-card" style="color: #1a73e8;"></i>
             </div>
@@ -234,7 +239,7 @@
         </div>
         
         <!-- eBanking -->
-        <div class="payment-method" data-method="ebanking" onclick="selectMethod('ebanking')">
+        <div class="payment-method" onclick="selectMethod('ebanking')">
             <div class="payment-method-icon">
                 <i class="fas fa-university" style="color: #d4af37;"></i>
             </div>
@@ -245,10 +250,91 @@
         </div>
         
         <!-- Payment Details Section (Dynamic) -->
-        <div id="paymentDetails" class="payment-details">
-            <p style="text-align: center; color: #6c757d;">
-                <i class="fas fa-hand-pointer"></i> Please select a payment method above
-            </p>
+        <div id="khaltiDetails" class="payment-details">
+            <h4 style="margin-bottom: 1rem;"><i class="fas fa-wallet"></i> Khalti Payment</h4>
+            <div class="form-group">
+                <label>Khalti Mobile Number</label>
+                <input type="tel" id="khaltiNumber" placeholder="98XXXXXXXX" pattern="[0-9]{10}">
+            </div>
+            <div class="form-group">
+                <label>Khalti PIN</label>
+                <input type="password" id="khaltiPin" placeholder="Enter your Khalti PIN" maxlength="4">
+            </div>
+            <div class="bank-logos">
+                <div style="text-align: center; width: 100%; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                    <i class="fas fa-shield-alt"></i> Powered by Khalti Digital Wallet
+                </div>
+            </div>
+        </div>
+        
+        <div id="esewaDetails" class="payment-details">
+            <h4 style="margin-bottom: 1rem;"><i class="fas fa-rupee-sign"></i> eSewa Payment</h4>
+            <div class="form-group">
+                <label>eSewa Mobile Number / Email</label>
+                <input type="text" id="esewaId" placeholder="98XXXXXXXX or email@example.com">
+            </div>
+            <div class="form-group">
+                <label>eSewa Password</label>
+                <input type="password" id="esewaPassword" placeholder="Enter your eSewa password">
+            </div>
+            <div class="bank-logos">
+                <div style="text-align: center; width: 100%; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                    <i class="fas fa-check-circle"></i> Pay with eSewa - Instant & Secure
+                </div>
+            </div>
+        </div>
+        
+        <div id="cardDetails" class="payment-details">
+            <h4 style="margin-bottom: 1rem;"><i class="fas fa-credit-card"></i> Card Details</h4>
+            <div class="form-group">
+                <label>Card Number</label>
+                <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+            </div>
+            <div class="form-group">
+                <label>Cardholder Name</label>
+                <input type="text" id="cardName" placeholder="Name on card">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="text" id="expiryDate" placeholder="MM/YY" maxlength="5">
+                </div>
+                <div class="form-group">
+                    <label>CVV</label>
+                    <input type="password" id="cvv" placeholder="123" maxlength="4">
+                </div>
+            </div>
+            <div class="bank-logos">
+                <div class="bank-btn"><i class="fab fa-cc-visa"></i> Visa</div>
+                <div class="bank-btn"><i class="fab fa-cc-mastercard"></i> MasterCard</div>
+                <div class="bank-btn"><i class="fab fa-cc-amex"></i> Amex</div>
+            </div>
+        </div>
+        
+        <div id="ebankingDetails" class="payment-details">
+            <h4 style="margin-bottom: 1rem;"><i class="fas fa-university"></i> Select Your Bank</h4>
+            <div class="bank-logos" style="flex-direction: column;">
+                <div class="bank-btn" onclick="selectBank('nabil')">
+                    <i class="fas fa-building"></i> Nabil Bank
+                </div>
+                <div class="bank-btn" onclick="selectBank('prabhu')">
+                    <i class="fas fa-building"></i> Prabhu Bank
+                </div>
+                <div class="bank-btn" onclick="selectBank('global')">
+                    <i class="fas fa-building"></i> Global IME Bank
+                </div>
+                <div class="bank-btn" onclick="selectBank('siddhartha')">
+                    <i class="fas fa-building"></i> Siddhartha Bank
+                </div>
+                <div class="bank-btn" onclick="selectBank('nepal')">
+                    <i class="fas fa-building"></i> Nepal Bank Limited
+                </div>
+            </div>
+            <input type="hidden" id="selectedBank" value="">
+            <div class="form-group" style="margin-top: 1rem;">
+                <label>Account Number</label>
+                <input type="text" id="accountNumber" placeholder="Enter your account number">
+            </div>
         </div>
     </div>
     
@@ -297,118 +383,38 @@
             el.classList.remove('selected');
         });
         
+        // Hide all payment details
+        document.getElementById('khaltiDetails').classList.remove('active');
+        document.getElementById('esewaDetails').classList.remove('active');
+        document.getElementById('cardDetails').classList.remove('active');
+        document.getElementById('ebankingDetails').classList.remove('active');
+        
         // Add selected class to clicked method
-        document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+        event.currentTarget.classList.add('selected');
         
         // Update hidden input
         document.getElementById('paymentMethod').value = method;
         
-        // Show payment details based on method
-        showPaymentDetails(method);
-    }
-    
-    function showPaymentDetails(method) {
-        const detailsDiv = document.getElementById('paymentDetails');
-        
+        // Show selected payment details
         if (method === 'khalti') {
-            detailsDiv.innerHTML = `
-                <h4 style="margin-bottom: 1rem;"><i class="fas fa-wallet"></i> Khalti Payment</h4>
-                <div class="form-group">
-                    <label>Khalti Mobile Number</label>
-                    <input type="tel" id="khaltiNumber" placeholder="98XXXXXXXX" pattern="[0-9]{10}">
-                </div>
-                <div class="form-group">
-                    <label>Khalti PIN</label>
-                    <input type="password" id="khaltiPin" placeholder="Enter your Khalti PIN" maxlength="4">
-                </div>
-                <div class="bank-logos">
-                    <div style="text-align: center; width: 100%; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                        <i class="fas fa-shield-alt"></i> Powered by Khalti Digital Wallet
-                    </div>
-                </div>
-            `;
-        } 
-        else if (method === 'esewa') {
-            detailsDiv.innerHTML = `
-                <h4 style="margin-bottom: 1rem;"><i class="fas fa-rupee-sign"></i> eSewa Payment</h4>
-                <div class="form-group">
-                    <label>eSewa Mobile Number / Email</label>
-                    <input type="text" id="esewaId" placeholder="98XXXXXXXX or email@example.com">
-                </div>
-                <div class="form-group">
-                    <label>eSewa Password</label>
-                    <input type="password" id="esewaPassword" placeholder="Enter your eSewa password">
-                </div>
-                <div class="bank-logos">
-                    <div style="text-align: center; width: 100%; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                        <i class="fas fa-check-circle"></i> Pay with eSewa - Instant & Secure
-                    </div>
-                </div>
-            `;
-        }
-        else if (method === 'card') {
-            detailsDiv.innerHTML = `
-                <h4 style="margin-bottom: 1rem;"><i class="fas fa-credit-card"></i> Card Details</h4>
-                <div class="form-group">
-                    <label>Card Number</label>
-                    <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
-                </div>
-                <div class="form-group">
-                    <label>Cardholder Name</label>
-                    <input type="text" id="cardName" placeholder="Name on card">
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label>Expiry Date</label>
-                        <input type="text" id="expiryDate" placeholder="MM/YY" maxlength="5">
-                    </div>
-                    <div class="form-group">
-                        <label>CVV</label>
-                        <input type="password" id="cvv" placeholder="123" maxlength="4">
-                    </div>
-                </div>
-                <div class="bank-logos">
-                    <div class="bank-btn"><i class="fab fa-cc-visa"></i> Visa</div>
-                    <div class="bank-btn"><i class="fab fa-cc-mastercard"></i> MasterCard</div>
-                    <div class="bank-btn"><i class="fab fa-cc-amex"></i> Amex</div>
-                </div>
-            `;
-        }
-        else if (method === 'ebanking') {
-            detailsDiv.innerHTML = `
-                <h4 style="margin-bottom: 1rem;"><i class="fas fa-university"></i> Select Your Bank</h4>
-                <div class="bank-logos" style="flex-direction: column;">
-                    <div class="bank-btn" onclick="selectBank('nabil')">
-                        <i class="fas fa-building"></i> Nabil Bank
-                    </div>
-                    <div class="bank-btn" onclick="selectBank('prabhu')">
-                        <i class="fas fa-building"></i> Prabhu Bank
-                    </div>
-                    <div class="bank-btn" onclick="selectBank('global')">
-                        <i class="fas fa-building"></i> Global IME Bank
-                    </div>
-                    <div class="bank-btn" onclick="selectBank('siddhartha')">
-                        <i class="fas fa-building"></i> Siddhartha Bank
-                    </div>
-                    <div class="bank-btn" onclick="selectBank('nepal')">
-                        <i class="fas fa-building"></i> Nepal Bank Limited
-                    </div>
-                </div>
-                <input type="hidden" id="selectedBank" value="">
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label>Account Number</label>
-                    <input type="text" id="accountNumber" placeholder="Enter your account number">
-                </div>
-            `;
+            document.getElementById('khaltiDetails').classList.add('active');
+        } else if (method === 'esewa') {
+            document.getElementById('esewaDetails').classList.add('active');
+        } else if (method === 'card') {
+            document.getElementById('cardDetails').classList.add('active');
+        } else if (method === 'ebanking') {
+            document.getElementById('ebankingDetails').classList.add('active');
         }
     }
     
     function selectBank(bank) {
         document.getElementById('selectedBank').value = bank;
+        
         // Remove selected class from all bank buttons
-        document.querySelectorAll('.bank-btn').forEach(btn => {
+        document.querySelectorAll('#ebankingDetails .bank-btn').forEach(btn => {
             btn.classList.remove('selected');
         });
+        
         // Add selected class to clicked button
         event.target.classList.add('selected');
     }
@@ -477,12 +483,19 @@
         payBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Payment...';
         payBtn.disabled = true;
         
-        // Simulate payment processing (in real implementation, this would call actual API)
+        // Submit the form to process order
         setTimeout(() => {
-            // Submit the form to process order
             document.getElementById('paymentForm').submit();
-        }, 2000);
+        }, 1000);
     }
+    
+    // Add onload event to hide all details initially
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('khaltiDetails').classList.remove('active');
+        document.getElementById('esewaDetails').classList.remove('active');
+        document.getElementById('cardDetails').classList.remove('active');
+        document.getElementById('ebankingDetails').classList.remove('active');
+    });
 </script>
 
 <%@ include file="common/footer.jsp" %>

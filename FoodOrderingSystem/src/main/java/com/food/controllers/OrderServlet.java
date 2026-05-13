@@ -25,7 +25,6 @@ public class OrderServlet extends HttpServlet {
         ArrayList<CartItem> cart = (ArrayList<CartItem>) session.getAttribute("cart");
         String email = (String) session.getAttribute("user");
         String paymentMethod = request.getParameter("paymentMethod");
-        String totalAmountStr = request.getParameter("totalAmount");
 
         try {
             if (cart == null || cart.isEmpty()) {
@@ -52,7 +51,7 @@ public class OrderServlet extends HttpServlet {
 
             // Insert order
             String sql = "INSERT INTO orders (user_id, total_amount, status, payment_method, order_date) VALUES (?, ?, ?, ?, NOW())";
-            PreparedStatement ps = conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             ps.setInt(1, userId);
             ps.setDouble(2, totalAmount);
             ps.setString(3, "Completed");
@@ -60,12 +59,10 @@ public class OrderServlet extends HttpServlet {
             ps.executeUpdate();
 
             // Get the order ID
-            String orderIdSql = "SELECT LAST_INSERT_ID() as order_id";
-            PreparedStatement orderIdPs = conn.prepareStatement(orderIdSql);
-            ResultSet orderIdRs = orderIdPs.executeQuery();
+            ResultSet generatedKeys = ps.getGeneratedKeys();
             int orderId = 0;
-            if (orderIdRs.next()) {
-                orderId = orderIdRs.getInt("order_id");
+            if (generatedKeys.next()) {
+                orderId = generatedKeys.getInt(1);
             }
 
             // Insert order items
@@ -89,13 +86,14 @@ public class OrderServlet extends HttpServlet {
             session.setAttribute("orderId", orderId);
             session.setAttribute("paymentMethod", paymentMethod);
             
-            // Redirect to success page
+            // Redirect to success page - USE .jsp extension
             response.sendRedirect("order-success");
 
         } catch (Exception e) {
             e.printStackTrace();
             response.setContentType("text/html");
             response.getWriter().println("<h3>Payment Failed: " + e.getMessage() + "</h3>");
+            response.getWriter().println("<a href='Cart' style='background: #ff6b35; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 1rem;'>Go Back to Cart</a>");
         }
     }
 }

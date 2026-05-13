@@ -45,15 +45,14 @@
             <h2 class="cart-total">Grand Total: Rs. <%= grandTotal %></h2>
         </div>
         
+        <!-- Buttons with gap -->
         <div class="cart-actions">
             <a href="${pageContext.request.contextPath}/menu" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Continue Shopping
             </a>
-           <form action="${pageContext.request.contextPath}/payment" method="get">
-    	<button type="submit" class="btn btn-success">
-        <i class="fas fa-credit-card"></i> Proceed to Payment
-    	</button>
-		</form>
+            <a href="${pageContext.request.contextPath}/payment" class="btn btn-success">
+                <i class="fas fa-credit-card"></i> Proceed to Payment
+            </a>
         </div>
     <% } else { %>
         <div class="empty-cart">
@@ -68,5 +67,33 @@
         </div>
     <% } %>
 </div>
+
+<style>
+    .cart-actions {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+    
+    .cart-actions .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        min-width: 200px;
+        text-align: center;
+    }
+    
+    @media (max-width: 768px) {
+        .cart-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .cart-actions .btn {
+            width: 100%;
+            min-width: auto;
+        }
+    }
+</style>
 
 <%@ include file="common/footer.jsp" %>
