@@ -4,47 +4,234 @@
     pageContext.setAttribute("pageTitle", "Admin Dashboard");
     ArrayList<Food> foods = (ArrayList<Food>) request.getAttribute("foods");
     ArrayList<Object> ordersList = (ArrayList<Object>) request.getAttribute("ordersList");
+    ArrayList<Food> lowStockItems = (ArrayList<Food>) request.getAttribute("lowStockItems");
     String message = request.getParameter("message");
+    String error = request.getParameter("error");
     
-    // Get real statistics from servlet
     Integer totalOrdersObj = (Integer) request.getAttribute("totalOrders");
+    Integer pendingOrdersObj = (Integer) request.getAttribute("pendingOrders");
     Integer totalUsersObj = (Integer) request.getAttribute("totalUsers");
     Double totalRevenueObj = (Double) request.getAttribute("totalRevenue");
     
     int totalOrders = (totalOrdersObj != null) ? totalOrdersObj : 0;
+    int pendingOrders = (pendingOrdersObj != null) ? pendingOrdersObj : 0;
     int totalUsers = (totalUsersObj != null) ? totalUsersObj : 0;
     double totalRevenue = (totalRevenueObj != null) ? totalRevenueObj : 0;
 %>
 <%@ include file="common/header.jsp" %>
 
 <style>
-    .order-details-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
     }
     
-    .order-details-table th,
-    .order-details-table td {
+    .stat-card {
+        background: white;
+        padding: 1.2rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        color: #ff6b35;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #ff6b35;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    
+    .card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #ff6b35, #ff8c5a);
+        color: white;
+        padding: 1rem 1.5rem;
+    }
+    
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.6rem;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #ff6b35;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary {
+        background: #ff6b35;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #e55a2b;
+        transform: translateY(-2px);
+    }
+    
+    .btn-success {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #219a52;
+        transform: translateY(-2px);
+    }
+    
+    .btn-warning {
+        background: #f39c12;
+        color: white;
+    }
+    
+    .btn-danger {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-sm {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th,
+    .data-table td {
         padding: 0.75rem;
         text-align: left;
         border-bottom: 1px solid #dee2e6;
     }
     
-    .order-details-table th {
+    .data-table th {
         background: #f8f9fa;
         font-weight: 600;
     }
     
-    .order-details-table tr:hover {
+    .data-table tr:hover {
         background: #f8f9fa;
+    }
+    
+    .alert {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+    
+    .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .low-stock {
+        background: #fff3cd !important;
+    }
+    
+    .low-stock-badge {
+        background: #ff6b35;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: bold;
+        margin-left: 0.5rem;
     }
     
     .status-badge {
         display: inline-block;
-        padding: 0.25rem 0.5rem;
+        padding: 0.2rem 0.5rem;
         border-radius: 20px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: bold;
     }
     
@@ -63,6 +250,31 @@
         color: white;
     }
     
+    .order-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .order-card-pending {
+        border-left: 4px solid #f39c12;
+        background: #fff8e7;
+    }
+    
+    .order-details-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.5rem;
+    }
+    
+    .order-details-table th,
+    .order-details-table td {
+        padding: 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
     .modal {
         display: none;
         position: fixed;
@@ -71,7 +283,7 @@
         width: 100%;
         height: 100%;
         background: rgba(0,0,0,0.5);
-        z-index: 1000;
+        z-index: 2000;
         justify-content: center;
         align-items: center;
     }
@@ -81,9 +293,8 @@
         border-radius: 16px;
         width: 90%;
         max-width: 1000px;
-        max-height: 80%;
+        max-height: 80vh;
         overflow: auto;
-        animation: fadeInScale 0.3s ease;
     }
     
     .modal-header {
@@ -111,14 +322,21 @@
         padding: 1.5rem;
     }
     
-    @keyframes fadeInScale {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
+    @media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
-        to {
-            opacity: 1;
-            transform: scale(1);
+        .form-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .form-row {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -128,120 +346,189 @@
         <i class="fas fa-check-circle"></i> <%= message %>
     </div>
 <% } %>
+<% if (error != null) { %>
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i> <%= error %>
+    </div>
+<% } %>
 
-<!-- Stats Grid - 4 Separate Columns -->
-<div style="
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
-">
-    <!-- Column 1: Total Food Items -->
-    <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer;" onclick="showFoodItemsModal()">
-        <div style="font-size: 2.5rem; color: #ff6b35; margin-bottom: 1rem;"><i class="fas fa-utensils"></i></div>
-        <div style="font-size: 2rem; font-weight: bold; color: #ff6b35;"><%= foods != null ? foods.size() : 0 %></div>
-        <div style="color: #6c757d; font-size: 0.875rem; text-transform: uppercase;">Total Food Items</div>
+<!-- Pending Orders Alert -->
+<% if (pendingOrders > 0) { %>
+    <div class="alert alert-warning">
+        <i class="fas fa-clock"></i> <strong><%= pendingOrders %> Pending Order(s)!</strong> 
+        These orders are waiting for stock approval. Please add stock and approve them.
     </div>
-    
-    <!-- Column 2: Total Orders -->
-    <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer;" onclick="showOrdersModal()">
-        <div style="font-size: 2.5rem; color: #ff6b35; margin-bottom: 1rem;"><i class="fas fa-shopping-cart"></i></div>
-        <div style="font-size: 2rem; font-weight: bold; color: #ff6b35;"><%= totalOrders %></div>
-        <div style="color: #6c757d; font-size: 0.875rem; text-transform: uppercase;">Total Orders</div>
+<% } %>
+
+<!-- Low Stock Alert -->
+<% if (lowStockItems != null && !lowStockItems.isEmpty()) { %>
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i> <strong>Low Stock Alert!</strong> 
+        The following items have low stock (5 or less):
+        <% for (Food item : lowStockItems) { %>
+            <span class="low-stock-badge"><%= item.getName() %>: <%= item.getStock() %> left</span>
+        <% } %>
     </div>
-    
-    <!-- Column 3: Total Users -->
-    <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer;" onclick="showUsersModal()">
-        <div style="font-size: 2.5rem; color: #ff6b35; margin-bottom: 1rem;"><i class="fas fa-users"></i></div>
-        <div style="font-size: 2rem; font-weight: bold; color: #ff6b35;"><%= totalUsers %></div>
-        <div style="color: #6c757d; font-size: 0.875rem; text-transform: uppercase;">Total Users</div>
+<% } %>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card" onclick="showFoodItemsModal()">
+        <div class="stat-icon"><i class="fas fa-utensils"></i></div>
+        <div class="stat-number"><%= foods != null ? foods.size() : 0 %></div>
+        <div class="stat-label">Total Food Items</div>
     </div>
-    
-    <!-- Column 4: Total Revenue -->
-    <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer;" onclick="showRevenueModal()">
-        <div style="font-size: 2.5rem; color: #ff6b35; margin-bottom: 1rem;"><i class="fas fa-rupee-sign"></i></div>
-        <div style="font-size: 2rem; font-weight: bold; color: #ff6b35;">Rs. <%= String.format("%.0f", totalRevenue) %></div>
-        <div style="color: #6c757d; font-size: 0.875rem; text-transform: uppercase;">Total Revenue</div>
+    <div class="stat-card" onclick="showOrdersModal()">
+        <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="stat-number"><%= totalOrders %></div>
+        <div class="stat-label">Total Orders</div>
+    </div>
+    <div class="stat-card" onclick="showUsersModal()">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-number"><%= totalUsers %></div>
+        <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card" onclick="showRevenueModal()">
+        <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+        <div class="stat-number">Rs. <%= String.format("%.0f", totalRevenue) %></div>
+        <div class="stat-label">Total Revenue</div>
     </div>
 </div>
 
-<!-- Add New Food Item Section -->
-<div class="card" style="margin-bottom: 2.5rem;">
-    <div class="card-header" style="background: linear-gradient(135deg, #ff6b35, #ff8c5a);">
-        <h2 style="margin: 0; color: white;"><i class="fas fa-plus-circle"></i> Add New Food Item</h2>
+<!-- Add New Food Item -->
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fas fa-plus-circle"></i> Add New Food Item</h2>
     </div>
-    <div class="card-body" style="padding: 2rem;">
+    <div class="card-body">
         <form action="${pageContext.request.contextPath}/add-food" method="post">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 1.5rem;">
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2c3e50;">
-                        <i class="fas fa-utensils"></i> Food Name
-                    </label>
-                    <input type="text" name="name" class="form-control" placeholder="Enter food name" required style="width: 100%; padding: 0.75rem; border: 2px solid #dee2e6; border-radius: 8px;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Food Name</label>
+                    <input type="text" name="name" class="form-control" required>
                 </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2c3e50;">
-                        <i class="fas fa-tag"></i> Category
-                    </label>
-                    <input type="text" name="category" class="form-control" placeholder="Enter category" required style="width: 100%; padding: 0.75rem; border: 2px solid #dee2e6; border-radius: 8px;">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" name="category" class="form-control" required>
                 </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2c3e50;">
-                        <i class="fas fa-rupee-sign"></i> Price
-                    </label>
-                    <input type="number" step="0.01" name="price" class="form-control" placeholder="Enter price" required style="width: 100%; padding: 0.75rem; border: 2px solid #dee2e6; border-radius: 8px;">
+                <div class="form-group">
+                    <label class="form-label">Price</label>
+                    <input type="number" step="0.01" name="price" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Initial Stock</label>
+                    <input type="number" name="stock" class="form-control" value="0" required>
                 </div>
             </div>
-            <div style="text-align: right;">
-                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
-                    <i class="fas fa-plus"></i> Add Food Item
-                </button>
-            </div>
+            <button type="submit" class="btn btn-primary">Add Food Item</button>
         </form>
     </div>
 </div>
 
-<!-- Manage Food Items Section -->
-<div class="card" style="margin-bottom: 2rem;">
-    <div class="card-header" style="background: linear-gradient(135deg, #ff6b35, #ff8c5a);">
-        <h2 style="margin: 0; color: white;"><i class="fas fa-list"></i> Manage Food Items</h2>
+<!-- Pending Orders Section (Needs Stock Approval) -->
+<% if (pendingOrders > 0) { %>
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+        <h2><i class="fas fa-clock"></i> Pending Orders (Need Stock Approval) - <%= pendingOrders %> orders</h2>
     </div>
-    <div class="card-body" style="padding: 2rem;">
-        <% if (foods != null && !foods.isEmpty()) { %>
-            <div style="overflow-x: auto;">
-                <table class="data-table" style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden;">
+    <div class="card-body">
+        <% for (Object obj : ordersList) {
+            java.util.Map<String, Object> order = (java.util.Map<String, Object>) obj;
+            if ("Pending".equals(order.get("status"))) {
+        %>
+            <div class="order-card order-card-pending" style="margin-bottom: 1rem; padding: 1rem;">
+                <h4>Order #<%= order.get("id") %> | <%= order.get("order_date") %></h4>
+                <p><strong>Customer:</strong> <%= order.get("user_name") != null ? order.get("user_name") : "User " + order.get("user_id") %></p>
+                <p><strong>Payment Method:</strong> <%= order.get("payment_method") %></p>
+                <p><strong>Stock Issue:</strong> <span style="color: #e74c3c;"><%= order.get("stock_issue") != null ? order.get("stock_issue") : "Insufficient stock" %></span></p>
+                <p><strong>Total Amount:</strong> Rs. <%= order.get("total_amount") %></p>
+                
+                <h5>Items Requested:</h5>
+                <table class="order-details-table">
                     <thead>
-                        <tr style="background: linear-gradient(135deg, #ff6b35, #ff8c5a); color: white;">
-                            <th style="padding: 1rem; text-align: left;">ID</th>
-                            <th style="padding: 1rem; text-align: left;">Food Name</th>
-                            <th style="padding: 1rem; text-align: left;">Category</th>
-                            <th style="padding: 1rem; text-align: left;">Price</th>
-                            <th style="padding: 1rem; text-align: center;">Actions</th>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Requested Quantity</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% for (Food f : foods) { %>
-                            <tr style="border-bottom: 1px solid #dee2e6;">
-                                <td style="padding: 1rem;"><%= f.getId() %></td>
-                                <td style="padding: 1rem;"><strong><%= f.getName() %></strong></td>
-                                <td style="padding: 1rem;"><%= f.getCategory() %></td>
-                                <td style="padding: 1rem;">Rs. <%= f.getPrice() %></td>
-                                <td style="padding: 1rem; text-align: center;">
-                                    <a href="${pageContext.request.contextPath}/edit-food?id=<%= f.getId() %>" class="btn btn-warning btn-sm">Edit</a>
-                                    <a href="javascript:void(0)" onclick="confirmDelete('${pageContext.request.contextPath}/delete-food?id=<%= f.getId() %>')" class="btn btn-danger btn-sm">Delete</a>
-                                </td>
-                             </tr>
+                        <% java.util.ArrayList<Object> items = (java.util.ArrayList<Object>) order.get("items");
+                           for (Object itemObj : items) {
+                               java.util.Map<String, Object> item = (java.util.Map<String, Object>) itemObj;
+                        %>
+                            <tr>
+                                <td><%= item.get("food_name") %></td>
+                                <td><%= item.get("quantity") %></td>
+                                <td>Rs. <%= item.get("price") %></td>
+                                <td>Rs. <%= (double)item.get("price") * (int)item.get("quantity") %></td>
+                            </tr>
                         <% } %>
                     </tbody>
-                 </table>
+                </table>
+                
+                <form action="${pageContext.request.contextPath}/approve-order" method="post" style="margin-top: 1rem;">
+                    <input type="hidden" name="orderId" value="<%= order.get("id") %>">
+                    <button type="submit" class="btn btn-success" onclick="return confirm('Approve this order? Stock will be deducted from inventory.')">
+                        <i class="fas fa-check-circle"></i> Approve Order
+                    </button>
+                </form>
             </div>
-        <% } else { %>
-            <div class="empty-state">No food items found. Add your first food item above!</div>
-        <% } %>
+        <% } } %>
+    </div>
+</div>
+<% } %>
+
+<!-- Manage Food Items -->
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fas fa-list"></i> Manage Food Items</h2>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (foods != null && !foods.isEmpty()) {
+                        for (Food f : foods) {
+                            String rowClass = (f.getStock() <= 5) ? "low-stock" : "";
+                    %>
+                        <tr class="<%= rowClass %>">
+                            <td><%= f.getId() %></td>
+                            <td><strong><%= f.getName() %></strong></td>
+                            <td><%= f.getCategory() %></td>
+                            <td>Rs. <%= f.getPrice() %></td>
+                            <td>
+                                <%= f.getStock() %>
+                                <% if (f.getStock() <= 5) { %>
+                                    <span class="low-stock-badge">Low Stock!</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <a href="${pageContext.request.contextPath}/edit-food?id=<%= f.getId() %>" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="javascript:void(0)" onclick="confirmDelete('${pageContext.request.contextPath}/delete-food?id=<%= f.getId() %>')" class="btn btn-danger btn-sm">Delete</a>
+                            </td>
+                        </tr>
+                    <% } } else { %>
+                        <tr><td colspan="6" style="text-align: center;">No food items found</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- Modal for Food Items -->
+<!-- Food Items Modal -->
 <div id="foodItemsModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -250,9 +537,7 @@
         </div>
         <div class="modal-body">
             <table class="order-details-table">
-                <thead>
-                    <tr><th>ID</th><th>Food Name</th><th>Category</th><th>Price</th></tr>
-                </thead>
+                <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th></tr></thead>
                 <tbody>
                     <% if (foods != null) {
                         for (Food f : foods) { %>
@@ -261,6 +546,7 @@
                                 <td><%= f.getName() %></td>
                                 <td><%= f.getCategory() %></td>
                                 <td>Rs. <%= f.getPrice() %></td>
+                                <td><%= f.getStock() %></td>
                             </tr>
                     <% } } %>
                 </tbody>
@@ -269,52 +555,56 @@
     </div>
 </div>
 
-<!-- Modal for Orders -->
+<!-- Orders Modal -->
 <div id="ordersModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3><i class="fas fa-shopping-cart"></i> Orders List</h3>
+            <h3><i class="fas fa-shopping-cart"></i> All Orders</h3>
             <button class="close-modal" onclick="closeModal('ordersModal')">&times;</button>
         </div>
         <div class="modal-body">
-            <% if (ordersList != null && !ordersList.isEmpty()) { %>
-                <table class="order-details-table">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>User</th>
-                            <th>Amount</th>
-                            <th>Payment</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% for (Object obj : ordersList) {
-                            java.util.Map<String, Object> order = (java.util.Map<String, Object>) obj;
-                        %>
-                            <tr>
-                                <td>#<%= order.get("id") %></td>
-                                <td><%= order.get("user_name") != null ? order.get("user_name") : "User " + order.get("user_id") %></td>
-                                <td>Rs. <%= order.get("total_amount") %></td>
-                                <td><%= order.get("payment_method") %></td>
-                                <td>
-                                    <% String status = (String) order.get("status"); %>
-                                    <span class="status-badge status-<%= status.toLowerCase() %>"><%= status %></span>
-                                </td>
-                                <td><%= order.get("order_date") %></td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            <% } else { %>
-                <div class="empty-state">No orders found</div>
+            <% if (ordersList != null && !ordersList.isEmpty()) { 
+                for (Object obj : ordersList) {
+                    java.util.Map<String, Object> order = (java.util.Map<String, Object>) obj;
+                    String statusClass = "";
+                    if ("Completed".equals(order.get("status"))) statusClass = "status-completed";
+                    else if ("Pending".equals(order.get("status"))) statusClass = "status-pending";
+                    else if ("Cancelled".equals(order.get("status"))) statusClass = "status-cancelled";
+            %>
+                <div class="order-card">
+                    <h4>Order #<%= order.get("id") %> | <%= order.get("order_date") %></h4>
+                    <p>Customer: <%= order.get("user_name") != null ? order.get("user_name") : "User " + order.get("user_id") %></p>
+                    <p>Status: <span class="status-badge <%= statusClass %>"><%= order.get("status") %></span> | Payment: <%= order.get("payment_method") %></p>
+                    <p>Total: Rs. <%= order.get("total_amount") %></p>
+                    <% if (order.get("stock_issue") != null) { %>
+                        <p style="color: #e74c3c;"><strong>Stock Issue:</strong> <%= order.get("stock_issue") %></p>
+                    <% } %>
+                    <h5>Items:</h5>
+                    <table class="order-details-table">
+                        <thead><tr><th>Item</th><th>Quantity</th><th>Price</th><th>Subtotal</th></tr></thead>
+                        <tbody>
+                            <% java.util.ArrayList<Object> items = (java.util.ArrayList<Object>) order.get("items");
+                               for (Object itemObj : items) {
+                                   java.util.Map<String, Object> item = (java.util.Map<String, Object>) itemObj;
+                            %>
+                                <tr>
+                                    <td><%= item.get("food_name") %></td>
+                                    <td><%= item.get("quantity") %></td>
+                                    <td>Rs. <%= item.get("price") %></td>
+                                    <td>Rs. <%= (double)item.get("price") * (int)item.get("quantity") %></td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } } else { %>
+                <p>No orders found</p>
             <% } %>
         </div>
     </div>
 </div>
 
-<!-- Modal for Users -->
+<!-- Users Modal -->
 <div id="usersModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -327,7 +617,7 @@
     </div>
 </div>
 
-<!-- Modal for Revenue -->
+<!-- Revenue Modal -->
 <div id="revenueModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -337,6 +627,8 @@
         <div class="modal-body" style="text-align: center;">
             <h2>Total Revenue: Rs. <%= String.format("%.0f", totalRevenue) %></h2>
             <p>Total Orders: <%= totalOrders %></p>
+            <p>Completed Orders: <%= totalOrders - pendingOrders %></p>
+            <p>Pending Orders: <%= pendingOrders %></p>
             <p>Average Order Value: Rs. <%= totalOrders > 0 ? String.format("%.0f", totalRevenue / totalOrders) : 0 %></p>
         </div>
     </div>
@@ -349,22 +641,10 @@
         }
     }
     
-    function showFoodItemsModal() {
-        document.getElementById('foodItemsModal').style.display = 'flex';
-    }
-    
-    function showOrdersModal() {
-        document.getElementById('ordersModal').style.display = 'flex';
-    }
-    
-    function showUsersModal() {
-        document.getElementById('usersModal').style.display = 'flex';
-        fetchUsers();
-    }
-    
-    function showRevenueModal() {
-        document.getElementById('revenueModal').style.display = 'flex';
-    }
+    function showFoodItemsModal() { document.getElementById('foodItemsModal').style.display = 'flex'; }
+    function showOrdersModal() { document.getElementById('ordersModal').style.display = 'flex'; }
+    function showUsersModal() { document.getElementById('usersModal').style.display = 'flex'; fetchUsers(); }
+    function showRevenueModal() { document.getElementById('revenueModal').style.display = 'flex'; }
     
     function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
@@ -376,22 +656,16 @@
             .then(data => {
                 let html = '<table class="order-details-table"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>';
                 data.forEach(user => {
-                    html += '<tr>';
-                    html += '<td>' + user.id + '</td>';
-                    html += '<td>' + user.name + '</td>';
-                    html += '<td>' + user.email + '</td>';
-                    html += '<td>' + user.role + '</td>';
-                    html += '</tr>';
+                    html += '<tr><td>' + user.id + '</td><td>' + user.name + '</td><td>' + user.email + '</td><td>' + user.role + '</td></tr>';
                 });
                 html += '</tbody></table>';
                 document.getElementById('usersList').innerHTML = html;
             })
             .catch(error => {
-                document.getElementById('usersList').innerHTML = '<p class="empty-state">Error loading users</p>';
+                document.getElementById('usersList').innerHTML = '<p>Error loading users</p>';
             });
     }
     
-    // Close modal when clicking outside
     window.onclick = function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.style.display = 'none';

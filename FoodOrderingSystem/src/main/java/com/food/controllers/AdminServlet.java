@@ -22,9 +22,8 @@ public class AdminServlet extends HttpServlet {
         try {
             Connection conn = DBConfig.getConnection();
 
-            // 1. Get all food items
-            String foodSql = "SELECT * FROM food";
-            PreparedStatement foodPs = conn.prepareStatement(foodSql);
+            // Get all food items with stock
+            PreparedStatement foodPs = conn.prepareStatement("SELECT * FROM food ORDER BY id");
             ResultSet foodRs = foodPs.executeQuery();
 
             ArrayList<Food> foodList = new ArrayList<>();
@@ -34,11 +33,12 @@ public class AdminServlet extends HttpServlet {
                 f.setName(foodRs.getString("name"));
                 f.setCategory(foodRs.getString("category"));
                 f.setPrice(foodRs.getDouble("price"));
+                f.setStock(foodRs.getInt("stock"));
                 foodList.add(f);
             }
             
-            // 2. Get all orders with user details
-            String orderSql = "SELECT o.id, o.user_id, o.total_amount, o.status, o.payment_method, o.order_date, u.name as user_name " +
+            // Get all orders with items (for detailed order list)
+            String orderSql = "SELECT o.id, o.user_id, o.total_amount, o.status, o.payment_method, o.stock_issue, o.order_date, u.name as user_name " +
                               "FROM orders o LEFT JOIN users u ON o.user_id = u.id ORDER BY o.order_date DESC";
             PreparedStatement orderPs = conn.prepareStatement(orderSql);
             ResultSet orderRs = orderPs.executeQuery();
@@ -52,43 +52,72 @@ public class AdminServlet extends HttpServlet {
                 order.put("total_amount", orderRs.getDouble("total_amount"));
                 order.put("status", orderRs.getString("status"));
                 order.put("payment_method", orderRs.getString("payment_method"));
+                order.put("stock_issue", orderRs.getString("stock_issue"));
                 order.put("order_date", orderRs.getTimestamp("order_date"));
+                
+                // Get order items
+                String itemSql = "SELECT oi.quantity, oi.price, f.name as food_name " +
+                                 "FROM order_items oi JOIN food f ON oi.food_id = f.id " +
+                                 "WHERE oi.order_id = ?";
+                PreparedStatement itemPs = conn.prepareStatement(itemSql);
+                itemPs.setInt(1, orderRs.getInt("id"));
+                ResultSet itemRs = itemPs.executeQuery();
+                
+                ArrayList<Object> items = new ArrayList<>();
+                while (itemRs.next()) {
+                    java.util.Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("food_name", itemRs.getString("food_name"));
+                    item.put("quantity", itemRs.getInt("quantity"));
+                    item.put("price", itemRs.getDouble("price"));
+                    items.add(item);
+                }
+                order.put("items", items);
                 ordersList.add(order);
             }
             
-            // 3. Get total orders count
-            String countSql = "SELECT COUNT(*) as total FROM orders";
-            PreparedStatement countPs = conn.prepareStatement(countSql);
+            // Get pending orders count
+            PreparedStatement pendingPs = conn.prepareStatement("SELECT COUNT(*) as total FROM orders WHERE status = 'Pending'");
+            ResultSet pendingRs = pendingPs.executeQuery();
+            int pendingOrders = 0;
+            if (pendingRs.next()) pendingOrders = pendingRs.getInt("total");
+            
+            // Get total orders count
+            PreparedStatement countPs = conn.prepareStatement("SELECT COUNT(*) as total FROM orders");
             ResultSet countRs = countPs.executeQuery();
             int totalOrders = 0;
-            if (countRs.next()) {
-                totalOrders = countRs.getInt("total");
-            }
+            if (countRs.next()) totalOrders = countRs.getInt("total");
             
-            // 4. Get total users count (only regular users, not admins)
-            String userSql = "SELECT COUNT(*) as total FROM users WHERE role = 'user'";
-            PreparedStatement userPs = conn.prepareStatement(userSql);
+            // Get total users count
+            PreparedStatement userPs = conn.prepareStatement("SELECT COUNT(*) as total FROM users WHERE role = 'user'");
             ResultSet userRs = userPs.executeQuery();
             int totalUsers = 0;
-            if (userRs.next()) {
-                totalUsers = userRs.getInt("total");
-            }
+            if (userRs.next()) totalUsers = userRs.getInt("total");
             
-            // 5. Get total revenue (sum of all order amounts)
-            String revenueSql = "SELECT SUM(total_amount) as total FROM orders WHERE status != 'Cancelled'";
-            PreparedStatement revenuePs = conn.prepareStatement(revenueSql);
+            // Get total revenue
+            PreparedStatement revenuePs = conn.prepareStatement("SELECT SUM(total_amount) as total FROM orders WHERE status = 'Completed'");
             ResultSet revenueRs = revenuePs.executeQuery();
             double totalRevenue = 0;
-            if (revenueRs.next()) {
-                totalRevenue = revenueRs.getDouble("total");
+            if (revenueRs.next()) totalRevenue = revenueRs.getDouble("total");
+
+            // Get low stock items
+            PreparedStatement lowStockPs = conn.prepareStatement("SELECT * FROM food WHERE stock <= 5 ORDER BY stock ASC");
+            ResultSet lowStockRs = lowStockPs.executeQuery();
+            ArrayList<Food> lowStockItems = new ArrayList<>();
+            while (lowStockRs.next()) {
+                Food f = new Food();
+                f.setId(lowStockRs.getInt("id"));
+                f.setName(lowStockRs.getString("name"));
+                f.setStock(lowStockRs.getInt("stock"));
+                lowStockItems.add(f);
             }
 
-            // Set all attributes to pass to JSP
             request.setAttribute("foods", foodList);
             request.setAttribute("ordersList", ordersList);
+            request.setAttribute("pendingOrders", pendingOrders);
             request.setAttribute("totalOrders", totalOrders);
             request.setAttribute("totalUsers", totalUsers);
             request.setAttribute("totalRevenue", totalRevenue);
+            request.setAttribute("lowStockItems", lowStockItems);
 
             request.getRequestDispatcher("WEB-INF/pages/Admin.jsp")
                    .forward(request, response);

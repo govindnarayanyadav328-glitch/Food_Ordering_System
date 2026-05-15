@@ -13,9 +13,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
-@WebServlet("/api/my-orders")
+@WebServlet("/api/orders")
 public class OrderApiServlet extends HttpServlet {
     
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -25,40 +24,13 @@ public class OrderApiServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
         
-        HttpSession session = request.getSession();
-        String email = (String) session.getAttribute("userEmail");
-        String userName = (String) session.getAttribute("user");
-        
-        if (email == null && userName == null) {
-            out.print("[]");
-            return;
-        }
-        
         try {
             Connection conn = DBConfig.getConnection();
-            
-            // Get user ID using email
-            int userId = 0;
-            String userSql = "SELECT id FROM users WHERE email=? OR name=?";
-            PreparedStatement userPs = conn.prepareStatement(userSql);
-            userPs.setString(1, email);
-            userPs.setString(2, userName);
-            ResultSet userRs = userPs.executeQuery();
-            if (userRs.next()) {
-                userId = userRs.getInt("id");
-            }
-            
-            if (userId == 0) {
-                out.print("[]");
-                return;
-            }
-            
-            // Get user orders
-            String sql = "SELECT id, total_amount, status, payment_method, order_date FROM orders WHERE user_id=? ORDER BY order_date DESC";
+            String sql = "SELECT id, user_id, total_amount, status, order_date FROM orders ORDER BY order_date DESC";
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
             
+            // Manually create JSON without Gson
             StringBuilder json = new StringBuilder();
             json.append("[");
             
@@ -71,9 +43,9 @@ public class OrderApiServlet extends HttpServlet {
                 
                 json.append("{");
                 json.append("\"id\":").append(rs.getInt("id")).append(",");
+                json.append("\"user_id\":").append(rs.getInt("user_id")).append(",");
                 json.append("\"total_amount\":").append(rs.getDouble("total_amount")).append(",");
-                json.append("\"status\":\"").append(rs.getString("status")).append("\",");
-                json.append("\"payment_method\":\"").append(rs.getString("payment_method") != null ? rs.getString("payment_method") : "N/A").append("\",");
+                json.append("\"status\":\"").append(escapeJson(rs.getString("status"))).append("\",");
                 json.append("\"order_date\":\"").append(rs.getTimestamp("order_date")).append("\"");
                 json.append("}");
             }
@@ -85,5 +57,10 @@ public class OrderApiServlet extends HttpServlet {
             e.printStackTrace();
             out.print("[]");
         }
+    }
+    
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 }

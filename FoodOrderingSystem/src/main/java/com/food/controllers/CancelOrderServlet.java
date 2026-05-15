@@ -15,24 +15,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet("/cancel-order")
+@WebServlet("/CancelOrderServlet")
 public class CancelOrderServlet extends HttpServlet {
     
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
         
         HttpSession session = request.getSession();
         String email = (String) session.getAttribute("userEmail");
-        String userName = (String) session.getAttribute("user");
-        
-        if ((email == null && userName == null)) {
-            out.print("{\"success\": false, \"message\": \"Please login first\"}");
-            return;
-        }
+        String name = (String) session.getAttribute("user");
         
         int orderId = Integer.parseInt(request.getParameter("orderId"));
         
@@ -42,53 +36,29 @@ public class CancelOrderServlet extends HttpServlet {
             // Get user ID
             int userId = 0;
             String userSql = "SELECT id FROM users WHERE email=? OR name=?";
-            PreparedStatement userPs = conn.prepareStatement(userSql);
-            userPs.setString(1, email);
-            userPs.setString(2, userName);
-            ResultSet userRs = userPs.executeQuery();
-            if (userRs.next()) {
-                userId = userRs.getInt("id");
+            PreparedStatement ps1 = conn.prepareStatement(userSql);
+            ps1.setString(1, email);
+            ps1.setString(2, name);
+            ResultSet rs1 = ps1.executeQuery();
+            if (rs1.next()) {
+                userId = rs1.getInt("id");
             }
             
-            if (userId == 0) {
-                out.print("{\"success\": false, \"message\": \"User not found\"}");
-                return;
-            }
-            
-            // Check if order belongs to user and is pending
-            String checkSql = "SELECT status FROM orders WHERE id=? AND user_id=?";
-            PreparedStatement checkPs = conn.prepareStatement(checkSql);
-            checkPs.setInt(1, orderId);
-            checkPs.setInt(2, userId);
-            ResultSet checkRs = checkPs.executeQuery();
-            
-            if (checkRs.next()) {
-                String status = checkRs.getString("status");
-                if (!"Pending".equals(status)) {
-                    out.print("{\"success\": false, \"message\": \"Only pending orders can be cancelled\"}");
-                    return;
-                }
-            } else {
-                out.print("{\"success\": false, \"message\": \"Order not found\"}");
-                return;
-            }
-            
-            // Update order status to Cancelled
+            // Cancel order
             String sql = "UPDATE orders SET status='Cancelled' WHERE id=? AND user_id=?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, orderId);
-            ps.setInt(2, userId);
-            int updated = ps.executeUpdate();
+            PreparedStatement ps2 = conn.prepareStatement(sql);
+            ps2.setInt(1, orderId);
+            ps2.setInt(2, userId);
+            int updated = ps2.executeUpdate();
             
             if (updated > 0) {
-                out.print("{\"success\": true, \"message\": \"Order cancelled successfully\"}");
+                out.print("{\"success\": true, \"message\": \"Order cancelled\"}");
             } else {
-                out.print("{\"success\": false, \"message\": \"Failed to cancel order\"}");
+                out.print("{\"success\": false, \"message\": \"Failed to cancel\"}");
             }
             
         } catch (Exception e) {
-            e.printStackTrace();
-            out.print("{\"success\": false, \"message\": \"Error: " + e.getMessage() + "\"}");
+            out.print("{\"success\": false, \"message\": \"Error\"}");
         }
     }
 }

@@ -1,14 +1,15 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
-    pageContext.setAttribute("pageTitle", "Login");
+    pageContext.setAttribute("pageTitle", "Forgot Password");
     String error = request.getParameter("error");
+    String msg = request.getParameter("msg");
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - FoodieHub</title>
+    <title>Forgot Password - FoodieHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,7 +21,7 @@
             justify-content: center;
             align-items: center;
         }
-        .login-container {
+        .container {
             background: white;
             border-radius: 16px;
             padding: 2rem;
@@ -28,17 +29,13 @@
             max-width: 400px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        .login-header {
+        .header {
             text-align: center;
             margin-bottom: 2rem;
         }
-        .login-header i {
+        .header i {
             font-size: 3rem;
             color: #ff6b35;
-        }
-        .login-header h2 {
-            margin-top: 0.5rem;
-            color: #2c3e50;
         }
         .form-group {
             margin-bottom: 1rem;
@@ -47,7 +44,6 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 600;
-            color: #2c3e50;
         }
         input {
             width: 100%;
@@ -82,55 +78,50 @@
             color: #ff6b35;
             text-decoration: none;
         }
-        .links a:hover {
-            text-decoration: underline;
-        }
         .alert {
             padding: 0.75rem;
             border-radius: 8px;
             margin-bottom: 1rem;
+        }
+        .alert-danger {
             background: #f8d7da;
             color: #721c24;
         }
-        hr {
-            margin: 1rem 0;
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <i class="fas fa-utensils"></i>
-            <h2>Welcome Back!</h2>
-            <p>Login to continue to FoodieHub</p>
+    <div class="container">
+        <div class="header">
+            <i class="fas fa-key"></i>
+            <h2>Reset Password</h2>
+            <p>Enter your email and new password</p>
         </div>
         
         <% if (error != null) { %>
-            <div class="alert">
-                <i class="fas fa-exclamation-circle"></i> Invalid email or password
-            </div>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <% if (msg != null) { %>
+            <div class="alert alert-success"><%= msg %></div>
         <% } %>
         
-        <form action="${pageContext.request.contextPath}/Login" method="post">
+        <form action="${pageContext.request.contextPath}/forgot-password" method="post">
             <div class="form-group">
                 <label>Email Address</label>
-                <input type="email" name="email" required placeholder="Enter your email">
+                <input type="email" name="email" required placeholder="Enter your registered email">
             </div>
             <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required placeholder="Enter your password">
+                <label>New Password</label>
+                <input type="password" name="newPassword" required placeholder="Enter new password">
             </div>
-            <button type="submit" class="btn">Login</button>
+            <button type="submit" class="btn">Reset Password</button>
         </form>
         
         <div class="links">
-            <a href="${pageContext.request.contextPath}/forgot-password">Forgot Password?</a>
-        </div>
-        
-        <hr>
-        
-        <div class="links">
-            Don't have an account? <a href="${pageContext.request.contextPath}/register">Register Now</a>
+            <a href="${pageContext.request.contextPath}/Login">Back to Login</a>
         </div>
     </div>
 </body>

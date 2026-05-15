@@ -284,58 +284,6 @@
             border: 1px solid #c3e6cb;
         }
         
-        .footer {
-            background: #2c3e50;
-            color: white;
-            padding: 3rem 0 1.5rem;
-            margin-top: 3rem;
-            width: 100%;
-        }
-        
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 2rem;
-        }
-        
-        .footer-section h3 {
-            margin-bottom: 1rem;
-            color: #ff6b35;
-            font-size: 1.25rem;
-        }
-        
-        .footer-section p, .footer-section ul {
-            color: #adb5bd;
-        }
-        
-        .footer-section ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .footer-section ul li {
-            margin-bottom: 0.5rem;
-        }
-        
-        .footer-section a {
-            color: #adb5bd;
-            text-decoration: none;
-        }
-        
-        .footer-section a:hover {
-            color: #ff6b35;
-        }
-        
-        .footer-bottom {
-            text-align: center;
-            padding-top: 2rem;
-            margin-top: 2rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        
         @media (max-width: 1200px) {
             .menu-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -353,10 +301,6 @@
             }
             .menu-title h1 {
                 font-size: 2rem;
-            }
-            .footer-content {
-                grid-template-columns: 1fr;
-                text-align: center;
             }
             .navbar-container {
                 flex-direction: column;
@@ -512,154 +456,8 @@
     </div>
 </div>
 
-<!-- Footer -->
-    </div>
-    
-    <footer class="footer">
-        <div class="footer-content">
-            <!-- Column 1: About FoodieHub -->
-            <div class="footer-section">
-                <h3><i class="fas fa-utensils"></i> About FoodieHub</h3>
-                <p>Your favorite food delivery service. Fresh, fast, and delicious meals delivered to your doorstep.</p>
-                <div class="footer-social" style="margin-top: 1rem;">
-                    <a href="#" style="margin-right: 1rem;"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" style="margin-right: 1rem;"><i class="fab fa-instagram"></i></a>
-                    <a href="#" style="margin-right: 1rem;"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
-                </div>
-            </div>
-            
-            <!-- Column 2: Quick Links -->
-            <div class="footer-section">
-                <h3><i class="fas fa-link"></i> Quick Links</h3>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/Home"><i class="fas fa-chevron-right"></i> Home</a></li>
-                    <li><a href="${pageContext.request.contextPath}/menu"><i class="fas fa-chevron-right"></i> Menu</a></li>
-                    <% if (session.getAttribute("user") == null) { %>
-                        <li><a href="${pageContext.request.contextPath}/Login"><i class="fas fa-chevron-right"></i> Login</a></li>
-                        <li><a href="${pageContext.request.contextPath}/register"><i class="fas fa-chevron-right"></i> Register</a></li>
-                    <% } else { %>
-                        <li><a href="${pageContext.request.contextPath}/Cart"><i class="fas fa-chevron-right"></i> Cart</a></li>
-                    <% } %>
-                    <li><a href="#"><i class="fas fa-chevron-right"></i> Offers</a></li>
-                    <li><a href="#"><i class="fas fa-chevron-right"></i> Blog</a></li>
-                </ul>
-            </div>
-            
-            <!-- Column 3: Contact Us -->
-            <div class="footer-section">
-                <h3><i class="fas fa-headset"></i> Contact Us</h3>
-                <ul class="contact-info">
-                    <li><i class="fas fa-phone-alt"></i> <a href="tel:+9779800000000">+977 9800000000</a></li>
-                    <li><i class="fas fa-envelope"></i> <a href="mailto:info@foodiehub.com">info@foodiehub.com</a></li>
-                    <li><i class="fas fa-map-marker-alt"></i> Kathmandu, Nepal</li>
-                    <li><i class="fas fa-clock"></i> Mon-Sun: 10:00 AM - 10:00 PM</li>
-                </ul>
-            </div>
-            
-            <!-- Column 4: Newsletter Subscription -->
-            <div class="footer-section">
-                <h3><i class="fas fa-envelope-open-text"></i> Subscribe to Our Daily Newsletter</h3>
-                <p style="margin-bottom: 1rem;">Get latest updates about new dishes, offers and events!</p>
-                
-                <form id="newsletterForm" onsubmit="return subscribeNewsletter(event)">
-                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <input type="email" id="newsletterEmail" placeholder="Your email address" required 
-                               style="flex: 1; padding: 0.75rem; border: none; border-radius: 8px; background: #f8f9fa;">
-                        <button type="submit" style="padding: 0.75rem 1.5rem; background: #ff6b35; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
-                            <i class="fas fa-paper-plane"></i> Subscribe
-                        </button>
-                    </div>
-                    <div id="newsletterMessage" style="font-size: 0.75rem; margin-top: 0.5rem;"></div>
-                </form>
-                
-                <div style="margin-top: 1rem; font-size: 0.75rem; color: #adb5bd;">
-                    <i class="fas fa-lock"></i> We never share your email with anyone
-                </div>
-            </div>
-        </div>
-        
-        <!-- Footer Bottom -->
-        <div class="footer-bottom">
-            <p>&copy; 2024 FoodieHub. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
-        </div>
-    </footer>
-    
-    <script>
-        // Auto-hide alerts after 3 seconds
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                alert.style.transition = 'opacity 0.5s ease';
-                alert.style.opacity = '0';
-                setTimeout(function() {
-                    alert.remove();
-                }, 500);
-            });
-        }, 3000);
-        
-        // Confirm delete function
-        function confirmDelete(url) {
-            if (confirm('Are you sure you want to delete this item?')) {
-                window.location.href = url;
-            }
-        }
-        
-        // Newsletter Subscription Function
-        function subscribeNewsletter(event) {
-            event.preventDefault();
-            const email = document.getElementById('newsletterEmail').value;
-            const messageDiv = document.getElementById('newsletterMessage');
-            
-            if (!email) {
-                messageDiv.innerHTML = '<span style="color: #e74c3c;"><i class="fas fa-exclamation-circle"></i> Please enter your email address</span>';
-                return false;
-            }
-            
-            if (!email.includes('@') || !email.includes('.')) {
-                messageDiv.innerHTML = '<span style="color: #e74c3c;"><i class="fas fa-exclamation-circle"></i> Please enter a valid email address</span>';
-                return false;
-            }
-            
-            // Simulate subscription (in real implementation, this would call a servlet)
-            messageDiv.innerHTML = '<span style="color: #27ae60;"><i class="fas fa-spinner fa-spin"></i> Subscribing...</span>';
-            
-            setTimeout(function() {
-                messageDiv.innerHTML = '<span style="color: #27ae60;"><i class="fas fa-check-circle"></i> Thank you for subscribing! Check your inbox.</span>';
-                document.getElementById('newsletterEmail').value = '';
-                
-                setTimeout(function() {
-                    messageDiv.innerHTML = '';
-                }, 5000);
-            }, 1500);
-            
-            return false;
-        }
-        
-        // Order Modal Functions (if exists)
-        function showOrderModal() {
-            const modal = document.getElementById('orderModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                if (typeof fetchOrders === 'function') fetchOrders();
-            }
-        }
-        
-        function closeOrderModal() {
-            const modal = document.getElementById('orderModal');
-            if (modal) modal.style.display = 'none';
-        }
-        
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('orderModal');
-            if (event.target === modal) {
-                closeOrderModal();
-            }
-        }
-    </script>
-</body>
-</html>
+<!-- Footer - Using the common footer.jsp file -->
+<%@ include file="common/footer.jsp" %>
 
 </body>
 </html>

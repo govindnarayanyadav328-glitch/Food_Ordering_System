@@ -5,12 +5,8 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.food.config.DBConfig;
-import com.google.gson.Gson;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -25,6 +21,7 @@ public class UserApiServlet extends HttpServlet {
             throws ServletException, IOException {
         
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
         
         try {
@@ -33,23 +30,36 @@ public class UserApiServlet extends HttpServlet {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             
-            ArrayList<Map<String, Object>> users = new ArrayList<>();
+            // Manually create JSON without Gson
+            StringBuilder json = new StringBuilder();
+            json.append("[");
             
+            boolean first = true;
             while (rs.next()) {
-                Map<String, Object> user = new HashMap<>();
-                user.put("id", rs.getInt("id"));
-                user.put("name", rs.getString("name"));
-                user.put("email", rs.getString("email"));
-                user.put("role", rs.getString("role"));
-                users.add(user);
+                if (!first) {
+                    json.append(",");
+                }
+                first = false;
+                
+                json.append("{");
+                json.append("\"id\":").append(rs.getInt("id")).append(",");
+                json.append("\"name\":\"").append(escapeJson(rs.getString("name"))).append("\",");
+                json.append("\"email\":\"").append(escapeJson(rs.getString("email"))).append("\",");
+                json.append("\"role\":\"").append(escapeJson(rs.getString("role"))).append("\"");
+                json.append("}");
             }
             
-            Gson gson = new Gson();
-            out.print(gson.toJson(users));
+            json.append("]");
+            out.print(json.toString());
             
         } catch (Exception e) {
             e.printStackTrace();
             out.print("[]");
         }
+    }
+    
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 }

@@ -20,21 +20,23 @@ public class UpdateFoodServlet extends HttpServlet {
         String name = request.getParameter("name");
         String category = request.getParameter("category");
         double price = Double.parseDouble(request.getParameter("price"));
+        int stock = Integer.parseInt(request.getParameter("stock"));
 
         try {
             Connection conn = DBConfig.getConnection();
 
-            String sql = "UPDATE food SET name=?, category=?, price=? WHERE id=?";
+            String sql = "UPDATE food SET name=?, category=?, price=?, stock=? WHERE id=?";
             PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setString(1, name);
             ps.setString(2, category);
             ps.setDouble(3, price);
-            ps.setInt(4, id);
+            ps.setInt(4, stock);
+            ps.setInt(5, id);
 
             ps.executeUpdate();
 
-            response.sendRedirect("Admin");
+            response.sendRedirect("Admin?message=Food updated successfully");
 
         } catch (Exception e) {
             e.printStackTrace();

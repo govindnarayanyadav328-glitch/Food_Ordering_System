@@ -1,14 +1,13 @@
 package com.food.model;
 
 public class Food {
-
     private int id;
     private String name;
     private String category;
     private double price;
+    private int stock;  // New field for stock
 
-    // getters & setters
-
+    // Getters and Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -20,4 +19,7 @@ public class Food {
 
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
+
+    public int getStock() { return stock; }
+    public void setStock(int stock) { this.stock = stock; }
 }

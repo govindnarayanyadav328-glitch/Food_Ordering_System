@@ -5,95 +5,99 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.food.config.DBConfig;
-import com.food.model.CartItem;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
-@WebServlet("/process-payment")
+@WebServlet("/OrderServlet")
 public class OrderServlet extends HttpServlet {
-
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        
         HttpSession session = request.getSession();
-
-        @SuppressWarnings("unchecked")
-        ArrayList<CartItem> cart = (ArrayList<CartItem>) session.getAttribute("cart");
-        String email = (String) session.getAttribute("user");
-        String paymentMethod = request.getParameter("paymentMethod");
-
+        String email = (String) session.getAttribute("userEmail");
+        String name = (String) session.getAttribute("user");
+        
+        // If not logged in, redirect to login
+        if (email == null && name == null) {
+            response.sendRedirect("Login");
+            return;
+        }
+        
         try {
-            if (cart == null || cart.isEmpty()) {
-                response.sendRedirect("Cart");
-                return;
-            }
-
             Connection conn = DBConfig.getConnection();
-
-            // Get user ID from email
-            int userId = 1;
-            String userSql = "SELECT id FROM users WHERE email=?";
+            
+            // Get user ID
+            int userId = 0;
+            String userSql = "SELECT id FROM users WHERE email = ? OR name = ?";
             PreparedStatement userPs = conn.prepareStatement(userSql);
             userPs.setString(1, email);
+            userPs.setString(2, name);
             ResultSet userRs = userPs.executeQuery();
+            
             if (userRs.next()) {
                 userId = userRs.getInt("id");
             }
-
-            double totalAmount = 0;
-            for (CartItem item : cart) {
-                totalAmount += item.getPrice() * item.getQuantity();
-            }
-
-            // Insert order
-            String sql = "INSERT INTO orders (user_id, total_amount, status, payment_method, order_date) VALUES (?, ?, ?, ?, NOW())";
-            PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, userId);
-            ps.setDouble(2, totalAmount);
-            ps.setString(3, "Completed");
-            ps.setString(4, paymentMethod);
-            ps.executeUpdate();
-
-            // Get the order ID
-            ResultSet generatedKeys = ps.getGeneratedKeys();
-            int orderId = 0;
-            if (generatedKeys.next()) {
-                orderId = generatedKeys.getInt(1);
-            }
-
-            // Insert order items
-            String itemSql = "INSERT INTO order_items (order_id, food_id, quantity, price) VALUES (?, ?, ?, ?)";
-            PreparedStatement itemPs = conn.prepareStatement(itemSql);
             
-            for (CartItem item : cart) {
-                itemPs.setInt(1, orderId);
-                itemPs.setInt(2, item.getId());
-                itemPs.setInt(3, item.getQuantity());
-                itemPs.setDouble(4, item.getPrice());
-                itemPs.addBatch();
+            if (userId == 0) {
+                response.sendRedirect("Login");
+                return;
             }
-            itemPs.executeBatch();
-
-            // Clear cart
-            session.removeAttribute("cart");
             
-            // Store success message
-            session.setAttribute("paymentSuccess", true);
-            session.setAttribute("orderId", orderId);
-            session.setAttribute("paymentMethod", paymentMethod);
+            // Get all orders for this user
+            String orderSql = "SELECT o.id, o.total_amount, o.status, o.payment_method, o.stock_issue, o.order_date " +
+                              "FROM orders o WHERE o.user_id = ? ORDER BY o.order_date DESC";
+            PreparedStatement orderPs = conn.prepareStatement(orderSql);
+            orderPs.setInt(1, userId);
+            ResultSet orderRs = orderPs.executeQuery();
             
-            // Redirect to success page - USE .jsp extension
-            response.sendRedirect("order-success");
-
+            ArrayList<Map<String, Object>> orders = new ArrayList<>();
+            
+            while (orderRs.next()) {
+                Map<String, Object> order = new HashMap<>();
+                order.put("id", orderRs.getInt("id"));
+                order.put("total_amount", orderRs.getDouble("total_amount"));
+                order.put("status", orderRs.getString("status"));
+                order.put("payment_method", orderRs.getString("payment_method"));
+                order.put("stock_issue", orderRs.getString("stock_issue"));
+                order.put("order_date", orderRs.getTimestamp("order_date"));
+                
+                // Get order items for this order
+                String itemSql = "SELECT oi.quantity, oi.price, f.name as food_name " +
+                                 "FROM order_items oi JOIN food f ON oi.food_id = f.id " +
+                                 "WHERE oi.order_id = ?";
+                PreparedStatement itemPs = conn.prepareStatement(itemSql);
+                itemPs.setInt(1, orderRs.getInt("id"));
+                ResultSet itemRs = itemPs.executeQuery();
+                
+                ArrayList<Map<String, Object>> items = new ArrayList<>();
+                while (itemRs.next()) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("food_name", itemRs.getString("food_name"));
+                    item.put("quantity", itemRs.getInt("quantity"));
+                    item.put("price", itemRs.getDouble("price"));
+                    items.add(item);
+                }
+                order.put("items", items);
+                orders.add(order);
+            }
+            
+            conn.close();
+            
+            // Send orders to JSP
+            request.setAttribute("orders", orders);
+            request.getRequestDispatcher("WEB-INF/pages/orders.jsp")
+                   .forward(request, response);
+            
         } catch (Exception e) {
             e.printStackTrace();
-            response.setContentType("text/html");
-            response.getWriter().println("<h3>Payment Failed: " + e.getMessage() + "</h3>");
-            response.getWriter().println("<a href='Cart' style='background: #ff6b35; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 1rem;'>Go Back to Cart</a>");
+            response.getWriter().println("Error: " + e.getMessage());
         }
     }
 }
